@@ -82,22 +82,32 @@ import {
 import type { EntryRow } from '@/data/types'
 
 const meta = moduleMeta('duty')
-const columns = ["交接编号", "值班班组", "值班日期", "班次", "值班人员", "交接事项", "交接人员", "交接状态"]
+const columns = ["交接编号", "来源编号", "值班班组", "值班日期", "班次", "值班人员", "交接事项", "交接人员", "交接状态"]
 const actions = ["发起交接", "确认交接", "登记遗留"]
 const statuses = ["待交接", "交接中", "已交接", "有遗留"]
-const stats = [{"label": "待交接班次", "value": 0}, {"label": "已交接班次", "value": 0}, {"label": "有遗留事项", "value": 0}]
 
 const rows = ref<EntryRow[]>([])
 const total = ref(0)
 const errorMessage = ref('')
 const filters = ref<Record<string, string>>({})
-const filterFields = columns.slice(0, 3)
+const filterFields = ["交接编号", "来源编号", "值班班组"]
 const statusSummary = computed(() =>
   statuses.map((status: string) => ({
     status,
     count: rows.value.filter((row) => String(row.status) === status).length,
   })),
 )
+// 消防检测结论同步过来的值班台账条数：与消防页面「结论已入值班台账」必须一致。
+const fireSourcedCount = computed(() =>
+  rows.value.filter((row) => String(row["交接编号"]).startsWith("DUTY-FIRE-")).length,
+)
+// 卡片数字由行实时计算，不再写死 0。
+const stats = computed(() => [
+  { label: "待交接班次", value: rows.value.filter((row) => row.status === "待交接").length },
+  { label: "已交接班次", value: rows.value.filter((row) => row.status === "已交接").length },
+  { label: "消防检测来源条数", value: fireSourcedCount.value },
+  { label: "有遗留事项", value: rows.value.filter((row) => row.status === "有遗留").length },
+])
 
 function resetFilters() {
   filters.value = {}

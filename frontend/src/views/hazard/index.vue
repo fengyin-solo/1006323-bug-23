@@ -82,10 +82,9 @@ import {
 import type { EntryRow } from '@/data/types'
 
 const meta = moduleMeta('hazard')
-const columns = ["隐患编号", "隐患部位", "隐患等级", "整改措施", "责任人员", "发现日期", "整改期限", "整改状态"]
+const columns = ["隐患编号", "来源编号", "隐患部位", "隐患等级", "整改措施", "责任人员", "发现日期", "整改期限", "整改状态"]
 const actions = ["派发整改", "提交验收", "标记逾期"]
 const statuses = ["待整改", "整改中", "已验收", "已逾期"]
-const stats = [{"label": "待整改隐患", "value": 0}, {"label": "整改中隐患", "value": 0}, {"label": "已逾期隐患", "value": 0}]
 
 const rows = ref<EntryRow[]>([])
 const total = ref(0)
@@ -98,6 +97,13 @@ const statusSummary = computed(() =>
     count: rows.value.filter((row) => String(row.status) === status).length,
   })),
 )
+// 卡片数字由行实时计算，与列表条数保持一致。
+const stats = computed(() => [
+  { label: "待整改隐患", value: rows.value.filter((row) => row.status === "待整改").length },
+  { label: "整改中隐患", value: rows.value.filter((row) => row.status === "整改中").length },
+  { label: "已验收隐患", value: rows.value.filter((row) => row.status === "已验收").length },
+  { label: "消防维修来源", value: rows.value.filter((row) => String(row["隐患编号"]).startsWith("HAZA-FIRE-")).length },
+])
 
 function resetFilters() {
   filters.value = {}
