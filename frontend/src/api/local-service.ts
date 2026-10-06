@@ -84,6 +84,57 @@ export function downloadEntries(key: string): void {
   URL.revokeObjectURL(url)
 }
 
+// 消防检测另存清单：取的是列表/详情同一份 firecontrol 行，结论字段一并带出，残缺值留空。
+export function exportFireLedger(): { filename: string; content: string } {
+  const header = [
+    '编号',
+    '设施编号',
+    '所属舱室',
+    '消防类型',
+    '探测器数量',
+    '当前状态',
+    '检测日期',
+    '检测结论',
+    '维修结论',
+    '责任人员',
+    '口径版本',
+    '残缺字段',
+  ]
+  const lines = [header.join(',')]
+  for (const row of listRows('firecontrol')) {
+    lines.push(
+      [
+        row.id,
+        row['设施编号'] ?? '',
+        row['所属舱室'] ?? '',
+        row['消防类型'] ?? '',
+        row['探测器数量'] ?? '',
+        row.status ?? '',
+        row['检测日期'] ?? '',
+        row['检测结论'] ?? '',
+        row['维修结论'] ?? '',
+        row['责任人员'] ?? '',
+        row['口径版本'] ?? '',
+        row['残缺字段'] ?? '',
+      ].join(','),
+    )
+  }
+  return { filename: '消防设施检测台账.csv', content: `﻿${lines.join('\n')}` }
+}
+
+export function downloadFireLedger(): void {
+  const { filename, content } = exportFireLedger()
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  document.body.appendChild(anchor)
+  anchor.click()
+  document.body.removeChild(anchor)
+  URL.revokeObjectURL(url)
+}
+
 export function loadOverview(): OverviewResult {
   const rows = allRows()
   const modules = [...MODULE_BY_KEY.values()].map((meta) => {

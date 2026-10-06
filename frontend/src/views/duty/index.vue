@@ -16,7 +16,21 @@
         <span class="stat-label">{{ item.label }}</span>
         <strong class="stat-value">{{ item.value }}</strong>
       </article>
+      <article class="stat-card stat-highlight">
+        <span class="stat-label">消防检测结案记录（与消防台账同口径）</span>
+        <strong class="stat-value">{{ fireDutyList.length }}</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">已结案检测设施探测器总数</span>
+        <strong class="stat-value">{{ detectorSum }}</strong>
+      </article>
     </div>
+
+    <p class="reconcile-banner">
+      对账：本台账消防检测记录 {{ fireDutyList.length }} 条 ｜ 消防台账已结案 {{ closedCount }} 条 ——
+      {{ countsMatch ? '两处条数一致，取值同源' : '两处条数不一致，可前往消防页面对账同步' }}。
+      消防检测结案时同事务写入本台账，同一检测单只留一条。
+    </p>
 
     <p class="status-legend">
       <span v-for="item in statusSummary" :key="item.status" class="legend-item">
@@ -42,7 +56,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="row in rows" :key="String(row.id)">
+        <tr v-for="row in rows" :key="String(row.id)" :class="{ 'linked-duty': isFireLinked(row) }">
           <td v-for="column in columns" :key="column">{{ row[column] ?? '—' }}</td>
           <td>{{ row.status }}</td>
           <td class="row-actions">
@@ -79,10 +93,11 @@ import {
   moduleMeta,
   runAction as applyAction,
 } from '@/api/local-service'
+import { closedFireCount, detectorTotal, fireDutyRows, reconcileFireLinks } from '@/data/fire-inspection'
 import type { EntryRow } from '@/data/types'
 
 const meta = moduleMeta('duty')
-const columns = ["交接编号", "值班班组", "值班日期", "班次", "值班人员", "交接事项", "交接人员", "交接状态"]
+const columns = ["交接编号", "来源单号", "值班班组", "值班日期", "班次", "值班人员", "交接事项", "探测器数量"]
 const actions = ["发起交接", "确认交接", "登记遗留"]
 const statuses = ["待交接", "交接中", "已交接", "有遗留"]
 const stats = [{"label": "待交接班次", "value": 0}, {"label": "已交接班次", "value": 0}, {"label": "有遗留事项", "value": 0}]
@@ -98,6 +113,16 @@ const statusSummary = computed(() =>
     count: rows.value.filter((row) => String(row.status) === status).length,
   })),
 )
+
+// 与消防页面同一个选择器：两处数字必然一致。
+const fireDutyList = computed(() => fireDutyRows())
+const closedCount = computed(() => closedFireCount())
+const countsMatch = computed(() => fireDutyList.value.length === closedCount.value)
+const detectorSum = computed(() => detectorTotal())
+
+function isFireLinked(row: EntryRow): boolean {
+  return String(row['来源模块'] ?? '') === '消防设施检测'
+}
 
 function resetFilters() {
   filters.value = {}
@@ -125,6 +150,8 @@ function runAction(action: string, row: EntryRow) {
 function reload() {
   errorMessage.value = ''
   try {
+    // 值班台账中的消防记录由结案同事务写入；进入页面幂等对账，保证与消防台账条数一致。
+    reconcileFireLinks()
     const payload = listEntries(meta.key, filters.value)
     rows.value = payload.items
     total.value = payload.total

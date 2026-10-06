@@ -35,3 +35,36 @@ body { margin: 0; background: #f6f8fb; color: #1f2937; }
 .error-text { color: #b42318; }
 .status-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 10px; font-size: 12px; color: var(--muted); }
 .legend-item { background: #eef2f7; border-radius: 999px; padding: 2px 10px; }
+
+/* 消防检测：列表 + 详情面板同一工作台 */
+.reconcile-banner { margin: 0 0 10px; padding: 8px 12px; font-size: 12px; background: #ecfdf3; border: 1px solid #abefc6; border-radius: 6px; color: #067647; }
+.workbench { display: flex; gap: 12px; align-items: flex-start; }
+.workbench-list { flex: 1; min-width: 0; }
+.detail-panel { width: 380px; flex-shrink: 0; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 14px; position: sticky; top: 12px; }
+.detail-panel h3 { margin: 0 0 10px; font-size: 15px; }
+.detail-status { margin-bottom: 10px; display: flex; gap: 8px; align-items: center; }
+.detail-grid { display: grid; grid-template-columns: 110px 1fr; gap: 4px 10px; margin: 0 0 10px; font-size: 12px; }
+.detail-grid dt { color: var(--muted); }
+.detail-grid dd { margin: 0; word-break: break-all; }
+.missing-value { color: #b54708; }
+.missing-tag { display: inline-block; background: #fffaeb; border: 1px solid #fedf89; color: #b54708; border-radius: 4px; padding: 0 6px; font-size: 11px; margin-left: 4px; }
+.version-tag { display: inline-block; background: #f2f4f7; border: 1px solid #d0d5dd; color: #475467; border-radius: 999px; padding: 0 8px; font-size: 11px; margin-left: 6px; }
+.conclusion-box { background: #f8fafc; border-left: 3px solid var(--brand); padding: 8px 10px; margin-bottom: 10px; font-size: 12px; }
+.conclusion-box p { margin: 4px 0 0; }
+.repair-input { margin-bottom: 10px; }
+.repair-input span { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.repair-input textarea { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: 12px; font-family: inherit; resize: vertical; }
+.detail-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.detail-actions.locked { display: block; }
+.locked-hint { font-size: 12px; color: var(--muted); }
+.stat-highlight { outline: 2px solid #abefc6; }
+tr.row-selected { background: #eff8ff; }
+tr.row-legacy { color: #667085; }
+.status-pill { display: inline-block; border-radius: 999px; padding: 1px 10px; font-size: 12px; background: #eaecf0; color: #344054; }
+.status-pill[data-status="检测中"] { background: #e0f2fe; color: #0369a1; }
+.status-pill[data-status="状态正常"] { background: #dcfae6; color: #067647; }
+.status-pill[data-status="需维修"] { background: #fef3f2; color: #b42318; }
+.status-pill[data-status="已结案"] { background: #e9d7fe; color: #6941c6; }
+.ok-text { color: #067647; }
+.linked-hazard { background: #fffbef; }
+.linked-duty { background: #f0f9ff; }

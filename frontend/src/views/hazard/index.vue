@@ -24,6 +24,11 @@
       </span>
     </p>
 
+    <p class="reconcile-banner">
+      消防检测维修结论联动：清单中来自「消防设施检测」的维修单 {{ fireLinked.length }} 条（其中整改中 {{ fireOpen.length }} 条），
+      与消防检测台账「需维修 + 已结案(维修)」同源，维修结论为同一份，不另存。
+    </p>
+
     <form class="filter-bar" @submit.prevent="reload">
       <label v-for="field in filterFields" :key="field" class="filter-item">
         <span>{{ field }}</span>
@@ -42,7 +47,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="row in rows" :key="String(row.id)">
+        <tr v-for="row in rows" :key="String(row.id)" :class="{ 'linked-hazard': isFireLinked(row) }">
           <td v-for="column in columns" :key="column">{{ row[column] ?? '—' }}</td>
           <td>{{ row.status }}</td>
           <td class="row-actions">
@@ -79,10 +84,11 @@ import {
   moduleMeta,
   runAction as applyAction,
 } from '@/api/local-service'
+import { fireHazardRows, reconcileFireLinks } from '@/data/fire-inspection'
 import type { EntryRow } from '@/data/types'
 
 const meta = moduleMeta('hazard')
-const columns = ["隐患编号", "隐患部位", "隐患等级", "整改措施", "责任人员", "发现日期", "整改期限", "整改状态"]
+const columns = ["隐患编号", "来源单号", "隐患部位", "隐患等级", "维修结论", "责任人员", "发现日期", "整改期限", "探测器数量"]
 const actions = ["派发整改", "提交验收", "标记逾期"]
 const statuses = ["待整改", "整改中", "已验收", "已逾期"]
 const stats = [{"label": "待整改隐患", "value": 0}, {"label": "整改中隐患", "value": 0}, {"label": "已逾期隐患", "value": 0}]
@@ -98,6 +104,13 @@ const statusSummary = computed(() =>
     count: rows.value.filter((row) => String(row.status) === status).length,
   })),
 )
+
+const fireLinked = computed(() => fireHazardRows())
+const fireOpen = computed(() => fireLinked.value.filter((row) => String(row.status) !== '已验收'))
+
+function isFireLinked(row: EntryRow): boolean {
+  return String(row['来源模块'] ?? '') === '消防设施检测'
+}
 
 function resetFilters() {
   filters.value = {}
@@ -125,6 +138,8 @@ function runAction(action: string, row: EntryRow) {
 function reload() {
   errorMessage.value = ''
   try {
+    // 消防检测提出维修/维修结案时同事务写本清单；这里再幂等对账，保证两边始终是同一份结论。
+    reconcileFireLinks()
     const payload = listEntries(meta.key, filters.value)
     rows.value = payload.items
     total.value = payload.total
